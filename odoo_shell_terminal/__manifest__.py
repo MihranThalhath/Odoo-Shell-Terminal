@@ -6,7 +6,7 @@
     """,
     "category": "Technical",
     "author": "Mihran Thalhath",
-    "website": "https://www.mihranthalhath.com",
+    "website": "https://github.com/MihranThalhath",
     "depends": ["web", "base"],
     "data": [
         "security/shell_terminal_groups.xml",
@@ -18,6 +18,7 @@
             "odoo_shell_terminal/static/src/components/**/*.scss",
         ],
     },
+    "images": ["static/description/banner.png"],
     "installable": True,
     "application": False,
     "license": "OPL-1",
