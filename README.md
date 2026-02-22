@@ -82,6 +82,14 @@ After installation, activate debug mode (`?debug=1`) and a terminal icon (`>_`) 
 | Shell | Python REPL against the live `env` |
 | Logs | Real-time server log stream |
 
+### Screenshots
+
+**Shell tab — Interactive Python REPL**
+![Shell tab](odoo_shell_terminal/static/description/screenshot_shell.png)
+
+**Logs tab — Live server log stream**
+![Logs tab](odoo_shell_terminal/static/description/screenshot_logs.png)
+
 ### Shell examples
 
 ```python
