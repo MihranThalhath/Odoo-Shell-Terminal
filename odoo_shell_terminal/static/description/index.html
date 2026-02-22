@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odoo Shell Terminal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --odoo-purple: #875A7B;
+            --odoo-dark: #62495B;
+            --terminal-bg: #1e1e2e;
+            --terminal-green: #a6e3a1;
+            --terminal-yellow: #f9e2af;
+            --terminal-red: #f38ba8;
+            --terminal-blue: #89b4fa;
+            --terminal-text: #cdd6f4;
+            --terminal-dim: #6c7086;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #333;
+        }
+
+        /* ── Hero ── */
+        .hero-section {
+            background: linear-gradient(135deg, var(--odoo-purple), var(--odoo-dark));
+            color: white;
+            padding: 5rem 0 4rem;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 0.25rem 0.9rem;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.2rem;
+        }
+
+        .hero-meta span {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            border-radius: 4px;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.8rem;
+            margin: 0.2rem;
+        }
+
+        /* ── Terminal mockup ── */
+        .terminal-window {
+            background: var(--terminal-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            font-family: 'Courier New', 'Cascadia Code', monospace;
+            font-size: 0.82rem;
+        }
+
+        .terminal-titlebar {
+            background: #313244;
+            padding: 0.6rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red   { background: #f38ba8; }
+        .dot-yellow{ background: #f9e2af; }
+        .dot-green { background: #a6e3a1; }
+
+        .terminal-tabs {
+            display: flex;
+            gap: 0.2rem;
+            margin-left: 0.5rem;
+        }
+
+        .terminal-tab {
+            padding: 0.2rem 0.8rem;
+            border-radius: 4px 4px 0 0;
+            font-size: 0.75rem;
+            color: var(--terminal-dim);
+            cursor: default;
+        }
+
+        .terminal-tab.active {
+            background: var(--terminal-bg);
+            color: var(--terminal-text);
+        }
+
+        .terminal-body {
+            padding: 1rem 1.2rem;
+            min-height: 220px;
+            color: var(--terminal-text);
+        }
+
+        .t-prompt  { color: var(--terminal-green); }
+        .t-comment { color: var(--terminal-dim); }
+        .t-result  { color: var(--terminal-blue); }
+        .t-warn    { color: var(--terminal-yellow); }
+        .t-error   { color: var(--terminal-red); }
+        .t-line    { margin: 0.15rem 0; }
+
+        /* ── Sections ── */
+        .section-features { padding: 4rem 0; background: #fff; }
+        .section-warning  { padding: 4rem 0; background: #fff8f0; }
+        .section-steps    { padding: 4rem 0; background: #f8f9fa; }
+        .section-config   { padding: 4rem 0; background: #fff; }
+        .section-footer   { padding: 3rem 0; background: var(--odoo-dark); color: white; }
+
+        /* ── Feature cards ── */
+        .feature-card {
+            padding: 1.8rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            background: white;
+            height: 100%;
+            border-top: 3px solid var(--odoo-purple);
+        }
+
+        .feature-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        /* ── Warning box ── */
+        .warning-box {
+            background: #fff3cd;
+            border-left: 5px solid #fd7e14;
+            border-radius: 6px;
+            padding: 1.5rem 2rem;
+        }
+
+        .danger-box {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            border-radius: 6px;
+            padding: 1.2rem 1.8rem;
+            margin-top: 1rem;
+        }
+
+        /* ── Code block ── */
+        .code-block {
+            background: var(--terminal-bg);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: var(--terminal-text);
+            overflow-x: auto;
+        }
+
+        .code-block .kw  { color: #cba6f7; }
+        .code-block .str { color: #a6e3a1; }
+        .code-block .cmt { color: var(--terminal-dim); }
+        .code-block .fn  { color: var(--terminal-blue); }
+        .code-block .commit { color: #f9e2af; font-weight: bold; }
+
+        /* ── Steps ── */
+        .step-number {
+            width: 44px;
+            height: 44px;
+            background: var(--odoo-purple);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0 auto 1rem;
+        }
+
+        /* ── Table ── */
+        .config-table th { background: var(--odoo-purple); color: white; }
+        .config-table td code { background: #f0f0f0; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.85rem; }
+
+        /* ── Section title ── */
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #2d2d2d;
+        }
+
+        .section-subtitle {
+            color: #666;
+            margin-bottom: 2.5rem;
+        }
+
+        /* ── AI badge ── */
+        .ai-note {
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════ HERO ══════════════════════ -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center g-5">
+
+            <!-- Left: text -->
+            <div class="col-lg-5">
+                <div class="hero-badge">Developer Tool · Odoo 19</div>
+                <h1 class="display-5 fw-bold mb-3">Odoo Shell Terminal</h1>
+                <p class="lead mb-4">
+                    A browser-based Python shell and live log viewer — accessible from the
+                    systray as a floating panel. No SSH. No server access. Just open and run.
+                </p>
+                <div class="hero-meta">
+                    <span>Version 19.0.1.0.0</span>
+                    <span>License: OPL-1</span>
+                    <span>Author: Mihran Thalhath</span>
+                </div>
+                <p class="ai-note mt-3">✦ Developed with the help of AI</p>
+            </div>
+
+            <!-- Right: terminal mockup -->
+            <div class="col-lg-7">
+                <div class="terminal-window">
+                    <div class="terminal-titlebar">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                        <div class="terminal-tabs">
+                            <div class="terminal-tab active">Shell</div>
+                            <div class="terminal-tab">Logs</div>
+                        </div>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="t-line"><span class="t-comment"># Query records</span></div>
+                        <div class="t-line"><span class="t-prompt">>>> </span>env['sale.order'].search([('state', '=', 'draft')], limit=5)</div>
+                        <div class="t-line"><span class="t-result">sale.order(3, 7, 12, 18, 21)</span></div>
+                        <div class="t-line mt-2"><span class="t-comment"># Modify a record</span></div>
+                        <div class="t-line"><span class="t-prompt">>>> </span>p = env['res.partner'].browse(1)</div>
+                        <div class="t-line"><span class="t-prompt">>>> </span>p.write({'name': 'ACME Corp'})</div>
+                        <div class="t-line"><span class="t-result">True</span></div>
+                        <div class="t-line mt-2"><span class="t-comment"># Persist the change</span></div>
+                        <div class="t-line"><span class="t-prompt">>>> </span><span class="t-warn">env.cr.commit()  # required to save!</span></div>
+                        <div class="t-line mt-2"><span class="t-comment"># Raw SQL</span></div>
+                        <div class="t-line"><span class="t-prompt">>>> </span>env.cr.execute("SELECT count(*) FROM res_partner")</div>
+                        <div class="t-line"><span class="t-prompt">>>> </span>env.cr.fetchone()</div>
+                        <div class="t-line"><span class="t-result">(142,)</span></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════ FEATURES ══════════════════════ -->
+<section class="section-features">
+    <div class="container">
+        <div class="text-center">
+            <h2 class="section-title">What's included</h2>
+            <p class="section-subtitle">Everything you need to interact with your live Odoo instance from the browser</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">&#x1F5A5;</div>
+                    <h5 class="fw-bold">Interactive Shell</h5>
+                    <p class="text-muted mb-0">
+                        Full Python REPL against the live Odoo environment.
+                        <code>env</code>, <code>uid</code>, and <code>user</code> are pre-bound.
+                        Single expressions auto-print their value — no <code>print()</code> needed.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">&#x1F4CB;</div>
+                    <h5 class="fw-bold">Persistent Sessions</h5>
+                    <p class="text-muted mb-0">
+                        The namespace survives across executions. Define a variable, use it in the
+                        next command. Sessions idle out after 10 minutes and can be reset manually.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">&#x1F4E1;</div>
+                    <h5 class="fw-bold">Live Log Viewer</h5>
+                    <p class="text-muted mb-0">
+                        Real-time server logs streamed via SSE. Backlog of 2,000 lines shown on
+                        connect. Color-coded by level: DEBUG, INFO, WARNING, ERROR, CRITICAL.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">&#x1F512;</div>
+                    <h5 class="fw-bold">Access Control</h5>
+                    <p class="text-muted mb-0">
+                        Gated behind the <strong>Odoo Shell User</strong> group.
+                        A server-side constraint enforces that only existing
+                        <strong>Technical Administrators</strong> can be assigned to this group —
+                        Odoo raises a <code>ValidationError</code> otherwise.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">&#x1F6E1;</div>
+                    <h5 class="fw-bold">Rate Limiting & Audit Log</h5>
+                    <p class="text-muted mb-0">
+                        Max 30 executions per user per minute. Every execution is logged with
+                        the user id, database, SHA-256 hash, and full code body for audit trails.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">&#x1F9F9;</div>
+                    <h5 class="fw-bold">Debug Mode Only</h5>
+                    <p class="text-muted mb-0">
+                        The systray icon is only rendered when Odoo is running in
+                        <strong>debug mode</strong> (<code>?debug=1</code>). Invisible in
+                        normal mode — an additional safety layer on top of group access.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════ WARNING ══════════════════════ -->
+<section class="section-warning">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="warning-box">
+                    <h4 class="fw-bold mb-3">&#x26A0;&#xFE0F; With great power comes great responsibility</h4>
+                    <p>
+                        The shell gives you <strong>direct, unrestricted access to the Odoo ORM and the underlying
+                        PostgreSQL database</strong>. Treat it with the same care as direct database access.
+                    </p>
+
+                    <h6 class="fw-bold mt-3">Database changes require an explicit commit</h6>
+                    <p>
+                        The shell session runs on its own long-lived cursor that is <strong>not auto-committed</strong>.
+                        Any write operations — <code>create()</code>, <code>write()</code>, <code>unlink()</code>,
+                        or raw <code>env.cr.execute()</code> — will <strong>not be persisted</strong> until you call:
+                    </p>
+
+                    <div class="code-block mb-3">
+                        <span class="cmt"># After making changes, commit to persist them:</span><br>
+                        <span class="commit">env.cr.commit()</span>
+                    </div>
+
+                    <p class="mb-2">
+                        If you close or reset the session without committing, all changes are
+                        <strong>rolled back automatically</strong>. This is a safety net — not something to rely on.
+                    </p>
+
+                    <div class="danger-box">
+                        <strong>&#x1F6AB; What can go wrong:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li><code>env['res.partner'].search([]).unlink()</code> + <code>env.cr.commit()</code> = all partners deleted, no undo</li>
+                            <li>Forgetting to commit = your writes silently disappear</li>
+                            <li>Committing mid-script = database left in a partially updated state</li>
+                        </ul>
+                    </div>
+
+                    <p class="mt-3 mb-0">
+                        <strong>Grant this group only to trusted Technical Administrators.
+                        Do not enable it on production systems unless you fully understand the consequences.</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════ GETTING STARTED ══════════════════════ -->
+<section class="section-steps">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Getting Started</h2>
+            <p class="section-subtitle">Up and running in five steps</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-2 text-center">
+                <div class="step-number">1</div>
+                <h6 class="fw-bold">Install the module</h6>
+                <p class="text-muted small">Find <em>Odoo Shell Terminal</em> in the Apps menu and click Install</p>
+            </div>
+            <div class="col-md-2 text-center">
+                <div class="step-number">2</div>
+                <h6 class="fw-bold">Ensure Technical Admin</h6>
+                <p class="text-muted small">The target user must already have <strong>Technical Administrator</strong> access in Settings</p>
+            </div>
+            <div class="col-md-2 text-center">
+                <div class="step-number">3</div>
+                <h6 class="fw-bold">Grant access</h6>
+                <p class="text-muted small">Assign the <em>Odoo Shell User</em> group. Odoo raises an error if the user isn't already a Technical Admin</p>
+            </div>
+            <div class="col-md-2 text-center">
+                <div class="step-number">4</div>
+                <h6 class="fw-bold">Enable debug mode</h6>
+                <p class="text-muted small">Add <code>?debug=1</code> to the URL — the <code>&gt;_</code> icon appears in the systray only in debug mode</p>
+            </div>
+            <div class="col-md-2 text-center">
+                <div class="step-number">5</div>
+                <h6 class="fw-bold">Run code</h6>
+                <p class="text-muted small">Type Python, press Enter. Call <code>env.cr.commit()</code> to persist any database changes</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════ CONFIGURATION ══════════════════════ -->
+<section class="section-config">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h2 class="section-title">Configuration</h2>
+            <p class="section-subtitle">No config file needed — tune constants in <code>controllers/shell.py</code></p>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <table class="table table-bordered config-table">
+                    <thead>
+                        <tr>
+                            <th>Constant</th>
+                            <th>Default</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>SESSION_IDLE_TIMEOUT</code></td><td>600 s</td><td>Idle time before a session is evicted</td></tr>
+                        <tr><td><code>MAX_SESSIONS</code></td><td>3</td><td>Max concurrent sessions (LRU eviction)</td></tr>
+                        <tr><td><code>MAX_CODE_LEN</code></td><td>10 000 chars</td><td>Max code length per execution</td></tr>
+                        <tr><td><code>RATE_WINDOW_SECS</code></td><td>60 s</td><td>Rate-limit sliding window</td></tr>
+                        <tr><td><code>RATE_MAX_REQUESTS</code></td><td>30</td><td>Max executions per user per window</td></tr>
+                    </tbody>
+                </table>
+
+                <h5 class="fw-bold mt-4 mb-3">Security Group</h5>
+                <table class="table table-bordered config-table">
+                    <thead>
+                        <tr><th>Group</th><th>XML ID</th><th>Prerequisite</th><th>Access</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Odoo Shell User</td>
+                            <td><code>odoo_shell_terminal.group_shell_terminal_user</code></td>
+                            <td><code>base.group_system</code> (Technical Administrator)</td>
+                            <td>Shell terminal + live log viewer</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="text-muted small">
+                    A server-side <code>@api.constrains</code> on <code>res.users</code> raises a
+                    <code>ValidationError</code> if you try to assign this group to a user who is not
+                    already a Technical Administrator. The systray icon is additionally hidden unless
+                    Odoo is in debug mode (<code>?debug=1</code>).
+                </p>
+
+                <h5 class="fw-bold mt-4 mb-3">Known Limitations</h5>
+                <ul>
+                    <li><strong>Multi-worker:</strong> Sessions are worker-bound. In multi-worker setups, requests may land on different workers, causing session loss. Use <code>--workers=1</code> or <code>gevent</code> during development.</li>
+                    <li><strong>Log viewer:</strong> Only captures logs from the worker handling the SSE connection. Configure a shared <code>--logfile</code> to see all workers.</li>
+                    <li><strong>No autocomplete:</strong> Syntax highlighting and autocomplete are not yet supported.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════ FOOTER ══════════════════════ -->
+<section class="section-footer">
+    <div class="container text-center">
+        <h5 class="fw-bold mb-1">Odoo Shell Terminal</h5>
+        <p class="mb-1" style="opacity:0.7">Version 19.0.1.0.0 &nbsp;·&nbsp; License: OPL-1 &nbsp;·&nbsp; Author: Mihran Thalhath</p>
+        <p style="opacity:0.45; font-size:0.78rem;">Developed with the help of AI</p>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
