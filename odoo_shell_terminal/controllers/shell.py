@@ -186,7 +186,7 @@ class ShellController(http.Controller):
 
     @http.route(
         "/odoo_shell_terminal/execute",
-        type="jsonrpc",
+        type="json",
         auth="user",
         methods=["POST"],
     )
@@ -245,7 +245,7 @@ class ShellController(http.Controller):
 
     @http.route(
         "/odoo_shell_terminal/reset_namespace",
-        type="jsonrpc",
+        type="json",
         auth="user",
         methods=["POST"],
     )
