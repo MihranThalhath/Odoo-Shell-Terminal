@@ -70,7 +70,7 @@ class LogStreamController(http.Controller):
 
     @http.route(
         "/odoo_shell_terminal/clear_log_buffer",
-        type="jsonrpc",
+        type="json",
         auth="user",
         methods=["POST"],
     )
